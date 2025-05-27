@@ -22,7 +22,7 @@ app.use(cors({
 }));
 
 app.use('/', require('./middlewares/validators').extractHeaderLanguage);
-app.use('/', require('./middlewares/validators').validateApiKey);
+// app.use('/', require('./middlewares/validators').validateApiKey);
 // app.use('/', require('./middlewares/validators').validateJwtToken); 
 // app.use('/', require('./middlewares/validators').validateAdmin); 
 app.use('/', require('./utilities/common').decodeBody);
