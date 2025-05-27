@@ -1,4 +1,4 @@
-const fs = require('fs');
+// const fs = require('fs');
 const mysql = require('mysql2');
 // const env = require('dotenv').config();
 
@@ -9,10 +9,6 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: true,
-        ca: fs.readFileSync("C:/Users/TRUPT/Downloads/ca.pem")
-    }
 });
 
 pool.getConnection((err, connection) => {
