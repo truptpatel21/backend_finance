@@ -335,6 +335,30 @@ class UserModel {
       };
       const [result] = await connection.promise().query('INSERT INTO transactions SET ?', transactionData);
       const [transaction] = await connection.promise().query('SELECT * FROM transactions WHERE id = ? AND is_deleted = 0', [result.insertId]);
+
+      // --- Update goal's current_amount ---
+      // Find the user's active goal (you can adjust this logic as needed)
+      const [goals] = await connection.promise().query(
+        'SELECT id, current_amount FROM goals WHERE user_id = ? ORDER BY deadline ASC LIMIT 1',
+        [user_id]
+      );
+      if (goals.length > 0) {
+        const goal = goals[0];
+        let newAmount = Number(goal.current_amount);
+        if (type === 'income') {
+          newAmount += Number(amount);
+        } else if (type === 'expense') {
+          newAmount -= Number(amount);
+        }
+        // Prevent negative current_amount if you want
+        newAmount = Math.max(0, newAmount);
+        await connection.promise().query(
+          'UPDATE goals SET current_amount = ?, updated_at = ? WHERE id = ?',
+          [newAmount, new Date(), goal.id]
+        );
+      }
+      // --- End goal update ---
+
       return { code: error_code.SUCCESS, messages: "Transaction added.", data: transaction[0] };
     } catch (err) {
       return { code: error_code.OPERATION_FAILED, messages: err.message };
