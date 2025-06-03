@@ -330,7 +330,7 @@ class Utility {
 
   async sendResetPasswordMail({ to_email, user_name, reset_token }) {
     // const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
-    const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}` || `https://finacyy.netlify.app/reset-password?token=${reset_token}`;
+    const resetLink = `https://finacyy.netlify.app/reset-password?token=${reset_token}`;
     console.log("Reset Link:", resetLink);
 
     const transporter = nodemailer.createTransport({
