@@ -330,7 +330,7 @@ class Utility {
 
   async sendResetPasswordMail({ to_email, user_name, reset_token }) {
     // const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
-    const resetLink = `${process.env.APP_URL.replace('/v1', '')}/reset-password?token=${reset_token}`;
+    const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
 
     const transporter = nodemailer.createTransport({ 
       host: "smtp.gmail.com",
