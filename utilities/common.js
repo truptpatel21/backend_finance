@@ -26,7 +26,7 @@ class Utility {
       return null;
     }
   }
-  
+
   generateOtp() {
     // generate otp of 4 digit
     return Math.floor(1000 + Math.random() * 9000).toString();
@@ -110,27 +110,27 @@ class Utility {
         console.error('Invalid input: Data is empty or not a string');
         return JSON.stringify({});
       }
-  
+
       const base64Regex = /^[A-Za-z0-9+/=]+$/;
       if (!base64Regex.test(data)) {
         console.error('Invalid input: Data is not valid base64');
         return JSON.stringify({});
       }
-  
+
       if (!constant.encryptionKey || !constant.encryptionIV) {
         throw new Error('Encryption key or IV is missing.');
       }
-  
+
       const key = Buffer.from(constant.encryptionKey, 'utf8');
       const iv = Buffer.from(constant.encryptionIV, 'utf8');
-  
+
       if (key.length !== 32) {
         throw new Error(`Invalid key length: ${key.length}, expected 32 bytes`);
       }
       if (iv.length !== 16) {
         throw new Error(`Invalid IV length: ${iv.length}, expected 16 bytes`);
       }
-  
+
       const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
       let decrypted = decipher.update(data, 'base64', 'utf8');
       decrypted += decipher.final('utf8');
@@ -202,9 +202,9 @@ class Utility {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
@@ -330,9 +330,10 @@ class Utility {
 
   async sendResetPasswordMail({ to_email, user_name, reset_token }) {
     // const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
-    const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
+    const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}` || `https://finacyy.netlify.app/reset-password?token=${reset_token}`;
+    console.log("Reset Link:", resetLink);
 
-    const transporter = nodemailer.createTransport({ 
+    const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
       secure: false,
@@ -352,7 +353,7 @@ class Utility {
 
 
 
-  
+
 
 
 }
