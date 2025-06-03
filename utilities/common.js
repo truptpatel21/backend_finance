@@ -346,7 +346,9 @@ class Utility {
       from: process.env.AUTH_MAIL,
       to: to_email,
       subject: "Password Reset - Financyy",
-      html: `<p>Hello ${user_name},</p><p>Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 1 hour.</p>`
+      html: `<p>Hello ${user_name},</p><p>Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 1 hour.</p>
+      <p>If button does not work than open this link: ${resetLink}</p>
+      <p>If you didn't request this, please ignore this email.</p>`
     };
     await transporter.sendMail(mailOptions);
   }
