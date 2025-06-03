@@ -49,6 +49,12 @@ class UserModel {
       await connection.promise().query('INSERT INTO devices SET ?', { user_id: result.insertId, device_type: body.device_type || "", token: encryptedjwt });
 
       const userWithDevice = await this.getUserWithDevice({ user_id: result.insertId });
+
+      common.sendWelcomeMail({
+        to_email: userData.email,
+        user_name: userData.name
+      });
+
       return { code: error_code.SUCCESS, messages: "Registration successful.", data: { ...userWithDevice, encryptedjwt } };
     } catch (err) {
       return { code: error_code.OPERATION_FAILED, messages: err.message };
@@ -78,11 +84,71 @@ class UserModel {
       await connection.promise().query('UPDATE devices SET token = ? WHERE user_id = ? AND is_deleted = 0', [encryptedjwt, user.id]);
 
       const userWithDevice = await this.getUserWithDevice({ user_id: user.id });
+
+      common.sendLoginMail({
+        to_email: user.email,
+        user_name: user.name,
+        device_info: userWithDevice.devices
+      });
+
       return { code: error_code.SUCCESS, messages: "Login successful.", data: { ...userWithDevice, encryptedjwt } };
     } catch (err) {
       return { code: error_code.OPERATION_FAILED, messages: err.message };
     }
   }
+
+
+  async generateResetToken(email) {
+    try {
+      const [users] = await connection.promise().query(
+        'SELECT id, name FROM users WHERE email = ? AND is_deleted = 0',
+        [email]
+      );
+      if (!users.length) {
+        return { code: 0, messages: "Email not found." };
+      }
+
+      const user = users[0];
+      // const token = crypto.randomBytes(32).toString('hex');
+      const token = common.generateRandomToken ? common.generateRandomToken(64) : require('crypto').randomBytes(32).toString('hex');
+      const expires_at = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await connection.promise().query('INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)', [
+        user.id, token, expires_at
+      ]);
+
+      return { code: 1, messages: "Reset link sent.", data: { name: user.name, token } };
+    } catch (err) {
+      return { code: 0, messages: err.message };
+    }
+  }
+
+  async resetPassword(token, newPassword) {
+    try {
+      const [rows] = await connection.promise().query(
+        'SELECT user_id FROM password_resets WHERE token = ? AND expires_at > NOW() LIMIT 1',
+        [token]
+      );
+
+      if (!rows.length) return { code: 0, messages: "Invalid or expired token." };
+
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await connection.promise().query('UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?', [
+        hashed, rows[0].user_id
+      ]);
+
+      await connection.promise().query('DELETE FROM password_resets WHERE token = ?', [token]);
+
+      return { code: 1, messages: "Password reset successful." };
+    } catch (err) {
+      return { code: 0, messages: err.message };
+    }
+  }
+
+
+  
+
+  
 
   async changePassword(body) {
     try {
@@ -265,6 +331,7 @@ class UserModel {
   }
 
   // Transaction Management
+  // ...existing code...
   async addTransaction(body) {
     try {
       const { user_id, category_id, amount, type, transaction_date, note, is_recurring, reference_id } = body;
@@ -335,11 +402,36 @@ class UserModel {
       };
       const [result] = await connection.promise().query('INSERT INTO transactions SET ?', transactionData);
       const [transaction] = await connection.promise().query('SELECT * FROM transactions WHERE id = ? AND is_deleted = 0', [result.insertId]);
+
+      // --- Update goal's current_amount ---
+      // Find the user's active goal (you can adjust this logic as needed)
+      const [goals] = await connection.promise().query(
+        'SELECT id, current_amount FROM goals WHERE user_id = ? ORDER BY deadline ASC LIMIT 1',
+        [user_id]
+      );
+      if (goals.length > 0) {
+        const goal = goals[0];
+        let newAmount = Number(goal.current_amount);
+        if (type === 'income') {
+          newAmount += Number(amount);
+        } else if (type === 'expense') {
+          newAmount -= Number(amount);
+        }
+        // Prevent negative current_amount if you want
+        newAmount = Math.max(0, newAmount);
+        await connection.promise().query(
+          'UPDATE goals SET current_amount = ?, updated_at = ? WHERE id = ?',
+          [newAmount, new Date(), goal.id]
+        );
+      }
+      // --- End goal update ---
+
       return { code: error_code.SUCCESS, messages: "Transaction added.", data: transaction[0] };
     } catch (err) {
       return { code: error_code.OPERATION_FAILED, messages: err.message };
     }
   }
+  // ...existing code...
 
   async getTransactions(body) {
     try {

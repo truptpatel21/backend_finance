@@ -180,6 +180,10 @@ class Utility {
     return token;
   }
 
+  generateRandomToken(length = 64) {
+    return require('crypto').randomBytes(length / 2).toString('hex');
+  }
+
   generateTrackingNumber() {
     return "TRK" + Math.floor(100000 + Math.random() * 900000);
   }
@@ -242,6 +246,115 @@ class Utility {
   sendOtp() {
     console.log(process.env.TEST);
   }
+
+  async sendLoginMail({ to_email, user_name, device_info }) {
+    try {
+      let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AUTH_MAIL,
+          pass: process.env.AUTH_PASS,
+        },
+      });
+
+      let deviceDetails = "";
+      if (device_info && device_info.length) {
+        deviceDetails = device_info.map(d =>
+          `Device Type: ${d.device_type || "Unknown"}, Token: ${d.token ? d.token.slice(0, 8) + "..." : "N/A"}`
+        ).join("<br>");
+      }
+
+      let mailOptions = {
+        from: process.env.AUTH_MAIL,
+        to: to_email,
+        subject: "Login Notification - Financyy",
+        html: `
+          <h2>Hello ${user_name || ""},</h2>
+          <p>Your account was just logged in.</p>
+          <p><b>Device Info:</b><br>${deviceDetails || "No device info available."}</p>
+          <p>If this wasn't you, please secure your account immediately.</p>
+          <br>
+          <small>This is an automated message from Financyy.</small>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error("Login mail error:", error.message);
+      return false;
+    }
+  }
+
+  async sendWelcomeMail({ to_email, user_name }) {
+    try {
+      let transporter = require("nodemailer").createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AUTH_MAIL,
+          pass: process.env.AUTH_PASS,
+        },
+      });
+
+      let mailOptions = {
+        from: process.env.AUTH_MAIL,
+        to: to_email,
+        subject: "Welcome to Financyy!",
+        html: `
+          <h2>Welcome, ${user_name || "User"}!</h2>
+          <p>Thank you for signing up for Financyy. 🎉</p>
+          <p>We're excited to help you manage your finances smarter and reach your goals.</p>
+          <ul>
+            <li>Track your expenses and income</li>
+            <li>Set budgets and financial goals</li>
+            <li>Get insights and tips for better money management</li>
+          </ul>
+          <p>Get started by logging in and exploring your dashboard.</p>
+          <br>
+          <br>
+          <small>— The Financyy Team</small>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error("Welcome mail error:", error.message);
+      return false;
+    }
+  }
+
+  async sendResetPasswordMail({ to_email, user_name, reset_token }) {
+    // const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
+    const resetLink = `${process.env.APP_URL.replace('/v1', '')}/reset-password?token=${reset_token}`;
+
+    const transporter = nodemailer.createTransport({ 
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.AUTH_MAIL,
+        pass: process.env.AUTH_PASS,
+      },
+    }); // your smtp
+    const mailOptions = {
+      from: process.env.AUTH_MAIL,
+      to: to_email,
+      subject: "Password Reset - Financyy",
+      html: `<p>Hello ${user_name},</p><p>Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 1 hour.</p>`
+    };
+    await transporter.sendMail(mailOptions);
+  }
+
+
+
+  
+
+
 }
 
 module.exports = new Utility();

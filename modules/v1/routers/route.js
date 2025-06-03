@@ -6,6 +6,11 @@ const middleware = require('../../../middlewares/validators');
 // User Authentication
 router.post('/api/auth/register', UserController.register);
 router.post('/api/auth/login', UserController.login);
+
+router.post('/api/auth/forgot-password', UserController.forgotPassword);
+router.post('/api/auth/reset-password', UserController.resetPassword);
+
+
 router.post('/api/auth/logout', middleware.validateJwtToken, UserController.logout);
 router.post('/api/auth/changepassword', middleware.validateJwtToken, UserController.changePassword);
 

@@ -41,6 +41,43 @@ class UserController {
         }
     }
 
+    // Forgot Password - Send Email with Link
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+            if (!email) return middleware.send_response(req, res, 400, { keyword: "Email is required" }, {});
+
+            const response = await UserModel.generateResetToken(email);
+            if (response.code === 1) {
+                await common.sendResetPasswordMail({
+                    to_email: email,
+                    user_name: response.data.name,
+                    reset_token: response.data.token,
+                });
+            }
+
+            middleware.send_response(req, res, response.code, { keyword: response.messages }, {});
+        } catch (error) {
+            middleware.send_response(req, res, 500, { keyword: error.message }, {});
+        }
+    }
+
+    // Reset Password
+    async resetPassword(req, res) {
+        try {
+            const { token, new_password } = req.body;
+            if (!token || !new_password) {
+                return middleware.send_response(req, res, 400, { keyword: "Token and new password are required" }, {});
+            }
+
+            const response = await UserModel.resetPassword(token, new_password);
+            middleware.send_response(req, res, response.code, { keyword: response.messages }, {});
+        } catch (error) {
+            middleware.send_response(req, res, 500, { keyword: error.message }, {});
+        }
+    }
+
+
     // User Logout
     async logout(req, res) {
         try {
@@ -163,7 +200,7 @@ class UserController {
         }
     }
 
-   
+
     // Transaction Management
     async addTransaction(req, res) {
         try {
@@ -534,7 +571,7 @@ class UserController {
 
     async compareCategorySpending(req, res) {
         try {
-            const { start_date1, end_date1, start_date2, end_date2 } =req.body
+            const { start_date1, end_date1, start_date2, end_date2 } = req.body
             const user_id = req.user.id;
             const response = await UserModel.compareCategorySpending({ user_id, start_date1, end_date1, start_date2, end_date2 });
             middleware.send_response(req, res, response.code, { keyword: response.messages }, response.data);

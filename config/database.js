@@ -22,9 +22,6 @@ pool.getConnection((err, connection) => {
 
 module.exports = pool;
 
-// mysql - h finance - db - trupt - finance.l.aivencloud.com - P 25793 - u avnadmin - p--ssl - mode=VERIFY_CA--ssl - ca=C: \Users\TRUPT\Downloads\ca.pem defaultdb
-
-
 
 
 // const mysql = require('mysql2');
