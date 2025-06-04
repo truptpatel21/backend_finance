@@ -257,26 +257,56 @@ class Utility {
           user: process.env.AUTH_MAIL,
           pass: process.env.AUTH_PASS,
         },
+        tls: {
+          ciphers: "SSLv3",
+        },
       });
 
       let deviceDetails = "";
       if (device_info && device_info.length) {
         deviceDetails = device_info.map(d =>
-          `Device Type: ${d.device_type || "Unknown"}, Token: ${d.token ? d.token.slice(0, 8) + "..." : "N/A"}`
-        ).join("<br>");
+          `<li>Device Type: ${d.device_type || "Unknown"}<br>Token: ${d.token ? d.token.slice(0, 8) + "..." : "N/A"}</li>`
+        ).join("");
       }
 
       let mailOptions = {
         from: process.env.AUTH_MAIL,
         to: to_email,
-        subject: "Login Notification - Financyy",
+        subject: "Financyy - Login Notification",
         html: `
-          <h2>Hello ${user_name || ""},</h2>
-          <p>Your account was just logged in.</p>
-          <p><b>Device Info:</b><br>${deviceDetails || "No device info available."}</p>
-          <p>If this wasn't you, please secure your account immediately.</p>
-          <br>
-          <small>This is an automated message from Financyy.</small>
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body { font-family: 'Arial', sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
+              .container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+              .header { background: #2c3e50; color: #ffffff; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { padding: 20px; color: #333333; line-height: 1.6; }
+              .footer { font-size: 12px; color: #777777; text-align: center; padding-top: 20px; border-top: 1px solid #eeeeee; }
+              ul { padding-left: 20px; }
+              li { margin-bottom: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Financyy</h1>
+              </div>
+              <div class="content">
+                <h2>Hello ${user_name || "User"},</h2>
+                <p>Your account was recently accessed. Here are the details:</p>
+                <h3>Device Information</h3>
+                <ul>${deviceDetails || "<li>No device info available.</li>"}</ul>
+                <p>If this wasn't you, please secure your account immediately by changing your password or contacting support.</p>
+              </div>
+              <div class="footer">
+                <p>This is an automated message from Financyy. Please do not reply.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `,
       };
 
@@ -298,25 +328,57 @@ class Utility {
           user: process.env.AUTH_MAIL,
           pass: process.env.AUTH_PASS,
         },
+        tls: {
+          ciphers: "SSLv3",
+        },
       });
 
       let mailOptions = {
         from: process.env.AUTH_MAIL,
         to: to_email,
-        subject: "Welcome to Financyy!",
+        subject: "Welcome to Financyy! 🎉",
         html: `
-          <h2>Welcome, ${user_name || "User"}!</h2>
-          <p>Thank you for signing up for Financyy. 🎉</p>
-          <p>We're excited to help you manage your finances smarter and reach your goals.</p>
-          <ul>
-            <li>Track your expenses and income</li>
-            <li>Set budgets and financial goals</li>
-            <li>Get insights and tips for better money management</li>
-          </ul>
-          <p>Get started by logging in and exploring your dashboard.</p>
-          <br>
-          <br>
-          <small>— The Financyy Team</small>
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body { font-family: 'Arial', sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
+              .container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+              .header { background: #2c3e50; color: #ffffff; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { padding: 20px; color: #333333; line-height: 1.6; }
+              .button { display: inline-block; padding: 12px 24px; background: #3498db; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; }
+              .button:hover { background: #2980b9; }
+              .footer { font-size: 12px; color: #777777; text-align: center; padding-top: 20px; border-top: 1px solid #eeeeee; }
+              ul { padding-left: 20px; }
+              li { margin-bottom: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Financyy</h1>
+              </div>
+              <div class="content">
+                <h2>Welcome, ${user_name || "User"}!</h2>
+                <p>Thank you for joining Financyy. We’re thrilled to help you manage your finances smarter and achieve your goals.</p>
+                <h3>What You Can Do:</h3>
+                <ul>
+                  <li>Track your expenses and income</li>
+                  <li>Set budgets and financial goals</li>
+                  <li>Get insights and tips for better money management</li>
+                </ul>
+                <p>Get started by logging in and exploring your dashboard.</p>
+                <a href="https://financyy.netlify.app" class="button">Go to Dashboard</a>
+                <p>We’re here to support you every step of the way!</p>
+              </div>
+              <div class="footer">
+                <p>— The Financyy Team</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `,
       };
 
@@ -329,28 +391,71 @@ class Utility {
   }
 
   async sendResetPasswordMail({ to_email, user_name, reset_token }) {
-    // const resetLink = `${process.env.APP_URL}/reset-password?token=${reset_token}`;
-    const resetLink = `https://finacyy.netlify.app/reset-password?token=${reset_token}`;
-    console.log("Reset Link:", resetLink);
+    try {
+      const resetLink = `https://financyy.netlify.app/reset-password?token=${reset_token}`;
+      console.log("Reset Link:", resetLink);
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.AUTH_MAIL,
-        pass: process.env.AUTH_PASS,
-      },
-    }); // your smtp
-    const mailOptions = {
-      from: process.env.AUTH_MAIL,
-      to: to_email,
-      subject: "Password Reset - Financyy",
-      html: `<p>Hello ${user_name},</p><p>Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 1 hour.</p>
-      <p>If button does not work than open this link: ${resetLink}</p>
-      <p>If you didn't request this, please ignore this email.</p>`
-    };
-    await transporter.sendMail(mailOptions);
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AUTH_MAIL,
+          pass: process.env.AUTH_PASS,
+        },
+        tls: {
+          ciphers: "SSLv3",
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.AUTH_MAIL,
+        to: to_email,
+        subject: "Financyy - Password Reset Request",
+        html: `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body { font-family: 'Arial', sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
+              .container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+              .header { background: #2c3e50; color: #ffffff; padding: 15px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { padding: 20px; color: #333333; line-height: 1.6; }
+              .button { display: inline-block; padding: 12px 24px; background: #3498db; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; }
+              .button:hover { background: #2980b9; }
+              .footer { font-size: 12px; color: #777777; text-align: center; padding-top: 20px; border-top: 1px solid #eeeeee; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Financyy</h1>
+              </div>
+              <div class="content">
+                <h2>Hello ${user_name || "User"},</h2>
+                <p>We received a request to reset your password. Click the button below to proceed:</p>
+                <a href="${resetLink}" class="button">Reset Password</a>
+                <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+                <p><a href="${resetLink}">${resetLink}</a></p>
+                <p>This link is valid for 1 hour. If you didn’t request this, please ignore this email or contact support.</p>
+              </div>
+              <div class="footer">
+                <p>This is an automated message from Financyy. Please do not reply.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error("Reset password mail error:", error.message);
+      return false;
+    }
   }
 
 
