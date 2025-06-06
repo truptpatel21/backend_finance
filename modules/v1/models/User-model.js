@@ -1273,7 +1273,29 @@ class UserModel {
     }
   }
 
-  // ...existing code...
+  async addContactMessage({ name, email, phone, message }) {
+    try {
+      if (!name || !email || !message) {
+        return { code: error_code.OPERATION_FAILED, messages: "Name, email, and message are required." };
+      }
+      await connection.promise().query(
+        'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
+        [name, email, phone || null, message]
+      );
+
+      // Send notification email to support/admin
+      await common.sendContactMail({
+        name,
+        email,
+        phone,
+        message
+      });
+
+      return { code: error_code.SUCCESS, messages: "Message sent successfully." };
+    } catch (err) {
+      return { code: error_code.OPERATION_FAILED, messages: err.message };
+    }
+  }
 
   
 }

@@ -626,7 +626,18 @@ class UserController {
         }
     }
 
-    // ...existing code...
+    async contactUs(req, res) {
+        try {
+            const { name, email, phone, message } = req.body;
+            if (!name || !email || !message) {
+                return middleware.send_response(req, res, 400, { keyword: "Name, email, and message are required." }, {});
+            }
+            const response = await UserModel.addContactMessage({ name, email, phone, message });
+            middleware.send_response(req, res, response.code, { keyword: response.messages }, {});
+        } catch (error) {
+            middleware.send_response(req, res, 500, { keyword: error.message }, {});
+        }
+      }
 
 }
 

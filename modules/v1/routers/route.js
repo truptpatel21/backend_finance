@@ -85,4 +85,8 @@ router.post('/api/analytics/spending-trends', middleware.validateJwtToken, UserC
 
 
 
+router.post('/api/contact', UserController.contactUs);
+
+
+
 module.exports = router;

@@ -10,6 +10,7 @@ const crypto = require("crypto");
 
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const sanitizeHtml = require('sanitize-html');
 
 
 
@@ -447,6 +448,103 @@ class Utility {
     };
     await transporter.sendMail(mailOptions);
   }
+
+
+  async sendContactMail({ name, email, phone, message }) {
+    try {
+      let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.AUTH_MAIL,
+          pass: process.env.AUTH_PASS,
+        },
+        tls: {
+          ciphers: "SSLv3",
+        },
+      });
+
+      const supportEmail = process.env.SUPPORT_EMAIL || process.env.AUTH_MAIL;
+
+      // Admin notification email
+      const adminMailOptions = {
+        from: `"Financyy Support" <${process.env.AUTH_MAIL}>`,
+        to: supportEmail,
+        subject: "New Contact Us Message - Financyy",
+        html: `
+          <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px;">
+            <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px;">
+              <h2 style="color: #2563EB;">New Contact Us Submission</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}" style="color: #2563EB; text-decoration: none;">${email}</a></p>
+              <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+              <p><strong>Message:</strong></p>
+              <div style="background: #f3f4f6; border-radius: 4px; padding: 12px; margin-bottom: 16px;">${message}</div>
+              <p style="font-size: 12px; color: #888;">Sent from Financyy Contact Us page on ${new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric'
+        })}</p>
+            </div>
+          </div>
+        `,
+      };
+
+      // User confirmation email
+      const userMailOptions = {
+        from: `"Financyy Support" <${process.env.AUTH_MAIL}>`,
+        to: email,
+        replyTo: email, // Allows replying directly to the user's email
+        subject: "Thank You for Contacting Financyy",
+        html: `
+          <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px;">
+            <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px;">
+              <h2 style="color: #2563EB;">Thank You, ${name}!</h2>
+              <p>We’ve received your message and will get back to you soon. Below are the details you submitted:</p>
+              <div style="background: #f3f4f6; border-radius: 4px; padding: 12px; margin-bottom: 16px;">
+                <p style="margin: 0 0 8px;"><strong>Name:</strong> ${name}</p>
+                <p style="margin: 0 0 8px;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #2563EB; text-decoration: none;">${email}</a></p>
+                <p style="margin: 0 0 8px;"><strong>Phone:</strong> ${phone || "Not provided"}</p>
+                <p style="margin: 0 0 8px;"><strong>Message:</strong></p>
+                <div style="margin: 0;">${message}</div>
+              </div>
+              <p>For immediate assistance, visit our <a href="https://finacyy.netlify.app/support" style="color: #2563EB; text-decoration: none;">Support Center</a> or reply to this email.</p>
+              <p style="font-size: 12px; color: #888; margin-bottom: 0;">Received on ${new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          timeZoneName: 'short'
+        })}</p>
+              <p style="font-size: 12px; color: #888;">— The Financyy Team</p>
+            </div>
+          </div>
+        `,
+      };
+
+      await Promise.all([
+        transporter.sendMail(adminMailOptions),
+        transporter.sendMail(userMailOptions)
+      ]);
+
+      return { success: true, message: 'Contact form submitted successfully' };
+    } catch (error) {
+      console.error('Contact mail error:', {
+        message: error.message,
+        timestamp: new Date().toISOString()
+      });
+      return {
+        success: false,
+        message: 'Failed to send contact form. Please try again later.',
+        error: error.message
+      };
+    }
+  }
+
 
 
 
