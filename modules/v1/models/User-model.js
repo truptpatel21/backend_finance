@@ -966,7 +966,11 @@ class UserModel {
   async getUpcomingRecurring({ user_id }) {
     try {
       const [rows] = await connection.promise().query(
-        `SELECT * FROM recurring_transactions WHERE user_id = ? AND next_due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 25 DAY)`,
+        `SELECT * FROM recurring_transactions 
+         WHERE user_id = ? 
+           AND next_due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+         ORDER BY next_due_date ASC
+         LIMIT 2`,
         [user_id]
       );
       if (!rows.length) {
