@@ -1017,33 +1017,38 @@ class UserModel {
 
   async getCashFlowForecast({ user_id }) {
     try {
-      // Get sum of recurring incomes and expenses for next month
+      // Get sum of recurring incomes and expenses for next month using category type
       const [recurring] = await connection.promise().query(
         `SELECT 
-        SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as recurring_income,
-        SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END) as recurring_expense
-      FROM recurring_transactions
-      WHERE user_id = ? AND next_due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 MONTH)`,
+            IFNULL(SUM(CASE WHEN c.type = 'income' THEN rt.amount ELSE 0 END), 0) as recurring_income,
+            IFNULL(SUM(CASE WHEN c.type = 'expense' THEN rt.amount ELSE 0 END), 0) as recurring_expense
+          FROM recurring_transactions rt
+          JOIN categories c ON rt.category_id = c.id
+          WHERE rt.user_id = ? 
+            AND c.is_deleted = 0 AND c.is_active = 1
+            AND rt.next_due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 MONTH)`,
         [user_id]
       );
+
       // Get average monthly net flow from last 3 months
       const [history] = await connection.promise().query(
         `SELECT 
-        SUM(CASE WHEN type='income' THEN amount ELSE 0 END) as total_income,
-        SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as total_expense
-      FROM transactions
-      WHERE user_id = ? AND transaction_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AND is_deleted = 0`,
+          SUM(CASE WHEN type='income' THEN amount ELSE 0 END) as total_income,
+          SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as total_expense
+        FROM transactions
+        WHERE user_id = ? AND transaction_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AND is_deleted = 0`,
         [user_id]
       );
       const avgNet = ((history[0].total_income || 0) - (history[0].total_expense || 0)) / 3;
+
       return {
         code: error_code.SUCCESS,
         messages: "Cash flow forecast calculated.",
         data: {
           recurring_income: recurring[0].recurring_income || 0,
-          recurring_expense: Math.abs(recurring[0].recurring_expense || 0),
+          recurring_expense: recurring[0].recurring_expense || 0,
           avg_monthly_net: avgNet || 0,
-          forecast_next_month: (recurring[0].recurring_income || 0) - Math.abs(recurring[0].recurring_expense || 0) + (avgNet || 0)
+          forecast_next_month: (recurring[0].recurring_income || 0) - (recurring[0].recurring_expense || 0) + (avgNet || 0)
         }
       };
     } catch (err) {
