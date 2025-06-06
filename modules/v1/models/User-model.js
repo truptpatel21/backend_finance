@@ -450,7 +450,7 @@ class UserModel {
         query += ' AND t.transaction_date BETWEEN ? AND ?';
         params.push(start_date, end_date);
       }
-      query += ' AND c.is_deleted = 0 AND c.is_active = 1';
+      query += ' AND c.is_deleted = 0 AND c.is_active = 1 ORDER BY t.transaction_date DESC';
       const [transactions] = await connection.promise().query(query, params);
       if (!transactions.length) {
         return { code: error_code.NO_DATA_FOUND, messages: "No transactions found." };

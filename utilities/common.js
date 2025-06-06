@@ -370,7 +370,7 @@ class Utility {
                   <li>Get insights and tips for better money management</li>
                 </ul>
                 <p>Get started by logging in and exploring your dashboard.</p>
-                <a href="https://financyy.netlify.app" class="button">Go to Dashboard</a>
+                <a href="finacyy.netlify.app" class="button">Go to Dashboard</a>
                 <p>We’re here to support you every step of the way!</p>
               </div>
               <div class="footer">
