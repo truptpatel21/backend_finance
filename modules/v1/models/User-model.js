@@ -1326,6 +1326,27 @@ class UserModel {
       return { code: 0, messages: err.message };
     }
   }
+
+
+  async setStripeCustomer(user_id, customer_id) {
+    await connection.promise().query(
+      'UPDATE users SET stripe_customer_id = ? WHERE id = ?', [customer_id, user_id]
+    );
+  }
+
+  async setStripeSubscription(user_id, subscription_id, plan) {
+    await connection.promise().query(
+      'UPDATE users SET stripe_subscription_id = ?, subscription_plan = ? WHERE id = ?',
+      [subscription_id, plan, user_id]
+    );
+  }
+
+  async getUserByStripeCustomer(customer_id) {
+    const [rows] = await connection.promise().query(
+      'SELECT * FROM users WHERE stripe_customer_id = ?', [customer_id]
+    );
+    return rows[0];
+  }
   
 
   

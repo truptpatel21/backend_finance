@@ -6,6 +6,8 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require("fs");
 const nodemailer = require('nodemailer');
+const { stripe, plans } = require('../../../utilities/stripe');
+const connection = require('../../../config/database');
 
 class UserController {
 
@@ -664,19 +666,18 @@ class UserController {
     async generateReport(req, res) {
         try {
             const { user_id } = req.user;
-            const { year, month, barChartImg, doughnutChartImg, email, user_name } = req.body;
+            const { year, month, barChartImg, doughnutChartImg, email, user_name, summary } = req.body;
 
-            // Retrieve monthly financial summary
-            const summary = await UserModel.getMonthlySummary({ user_id, year, month });
+            // const summary = await UserModel.getMonthlySummary({ user_id, year, month });
 
-            // Retrieve top spending categories for the given month
             const categories = await UserModel.getTopSpendingCategories({
                 user_id,
                 start_date: `${year}-${month.toString().padStart(2, "0")}-01`,
                 end_date: `${year}-${month.toString().padStart(2, "0")}-31`,
             });
 
-            // Use the utility to generate PDF and send email
+            console.log("Generating PDF report for user:", user_id, "Year:", year, "Month:", month);
+            console.log("summary:", summary);
             const pdfBuffer = await common.sendReportMailWithPDF({
                 to_email: email,
                 year,
@@ -685,7 +686,7 @@ class UserController {
                 categories,
                 barChartImg,
                 doughnutChartImg,
-                user_name
+                user_name,
             });
 
             res.setHeader("Content-Disposition", `attachment; filename=Finance_Report_${year}_${month}.pdf`);
@@ -695,7 +696,83 @@ class UserController {
             console.error("Error generating PDF report:", error);
             res.status(500).json({ message: "An error occurred while generating the report." });
         }
-      }
+    }
+    
+
+
+
+async createStripeSession(req, res) {
+    try {
+        const { plan } = req.body;
+        const user_id = req.user.id;
+        if (!plans[plan]) return res.status(400).json({ message: "Invalid plan." });
+
+        // Create Stripe customer if not exists
+        let [user] = await connection.promise().query('SELECT * FROM users WHERE id = ?', [user_id]);
+        user = user[0];
+        let customerId = user.stripe_customer_id;
+        if (!customerId) {
+            const customer = await stripe.customers.create({
+                email: user.email,
+                name: user.name,
+                metadata: { user_id }
+            });
+            await UserModel.setStripeCustomer(user_id, customer.id);
+            customerId = customer.id;
+        }
+
+        // Create checkout session
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'subscription',
+            customer: customerId,
+            line_items: [{ price: plans[plan], quantity: 1 }],
+            success_url: `${process.env.APP_URL}/dashboard?subscription=success`,
+            cancel_url: `${process.env.APP_URL}/dashboard?subscription=cancel`,
+            metadata: { user_id, plan }
+        });
+
+        res.json({ url: session.url });
+    } catch (err) {
+        console.error("Stripe session error:", err);
+        res.status(500).json({ message: "Stripe error." });
+    }
+}
+
+// Stripe webhook endpoint
+async stripeWebhook(req, res) {
+    const sig = req.headers['stripe-signature'];
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error("Webhook signature error:", err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle subscription events
+    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const planId = subscription.items.data[0].price.id;
+        let plan = Object.keys(plans).find(key => plans[key] === planId) || 'free';
+        const user = await UserModel.getUserByStripeCustomer(customerId);
+        if (user) {
+            await UserModel.setStripeSubscription(user.id, subscription.id, plan);
+        }
+    }
+    if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const user = await UserModel.getUserByStripeCustomer(customerId);
+        if (user) {
+            await UserModel.setStripeSubscription(user.id, null, 'free');
+        }
+    }
+
+    res.json({ received: true });
+}
+
     
 
   

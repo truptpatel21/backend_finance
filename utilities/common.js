@@ -274,7 +274,7 @@ class Utility {
       let mailOptions = {
         from: process.env.AUTH_MAIL,
         to: to_email,
-        subject: "Financyy - Login Notification",
+        subject: "Finacyy - Login Notification",
         html: `
           <!DOCTYPE html>
           <html lang="en">
@@ -294,7 +294,7 @@ class Utility {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Financyy</h1>
+                <h1>Finacyy</h1>
               </div>
               <div class="content">
                 <h2>Hello ${user_name || "User"},</h2>
@@ -304,7 +304,7 @@ class Utility {
                 <p>If this wasn't you, please secure your account immediately by changing your password or contacting support.</p>
               </div>
               <div class="footer">
-                <p>This is an automated message from Financyy. Please do not reply.</p>
+                <p>This is an automated message from Finacyy. Please do not reply.</p>
               </div>
             </div>
           </body>
@@ -338,7 +338,7 @@ class Utility {
       let mailOptions = {
         from: process.env.AUTH_MAIL,
         to: to_email,
-        subject: "Welcome to Financyy! 🎉",
+        subject: "Welcome to Finacyy! 🎉",
         html: `
           <!DOCTYPE html>
           <html lang="en">
@@ -360,11 +360,11 @@ class Utility {
           <body>
             <div class="container">
               <div class="header">
-                <h1>Financyy</h1>
+                <h1>Finacyy</h1>
               </div>
               <div class="content">
                 <h2>Welcome, ${user_name || "User"}!</h2>
-                <p>Thank you for joining Financyy. We’re thrilled to help you manage your finances smarter and achieve your goals.</p>
+                <p>Thank you for joining Finacyy. We’re thrilled to help you manage your finances smarter and achieve your goals.</p>
                 <h3>What You Can Do:</h3>
                 <ul>
                   <li>Track your expenses and income</li>
@@ -376,7 +376,7 @@ class Utility {
                 <p>We’re here to support you every step of the way!</p>
               </div>
               <div class="footer">
-                <p>— The Financyy Team</p>
+                <p>— The Finacyy Team</p>
               </div>
             </div>
           </body>
@@ -409,7 +409,7 @@ class Utility {
     const mailOptions = {
       from: process.env.AUTH_MAIL,
       to: to_email,
-      subject: "Financyy - Password Reset Request",
+      subject: "Finacyy - Password Reset Request",
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -429,7 +429,7 @@ class Utility {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Financyy</h1>
+              <h1>Finacyy</h1>
             </div>
             <div class="content">
               <h2>Hello ${user_name || "User"},</h2>
@@ -440,7 +440,7 @@ class Utility {
               <p>This link is valid for 1 hour. If you didn’t request this, please ignore this email or contact support.</p>
             </div>
             <div class="footer">
-              <p>This is an automated message from Financyy. Please do not reply.</p>
+              <p>This is an automated message from Finacyy. Please do not reply.</p>
             </div>
           </div>
         </body>
@@ -470,9 +470,9 @@ class Utility {
 
       // Admin notification email
       const adminMailOptions = {
-        from: `"Financyy Support" <${process.env.AUTH_MAIL}>`,
+        from: `"Finacyy Support" <${process.env.AUTH_MAIL}>`,
         to: supportEmail,
-        subject: "New Contact Us Message - Financyy",
+        subject: "New Contact Us Message - Finacyy",
         html: `
           <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px;">
             <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px;">
@@ -482,7 +482,7 @@ class Utility {
               <p><strong>Phone:</strong> ${phone || "N/A"}</p>
               <p><strong>Message:</strong></p>
               <div style="background: #f3f4f6; border-radius: 4px; padding: 12px; margin-bottom: 16px;">${message}</div>
-              <p style="font-size: 12px; color: #888;">Sent from Financyy Contact Us page on ${new Date().toLocaleString('en-US', {
+              <p style="font-size: 12px; color: #888;">Sent from Finacyy Contact Us page on ${new Date().toLocaleString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -496,10 +496,10 @@ class Utility {
 
       // User confirmation email
       const userMailOptions = {
-        from: `"Financyy Support" <${process.env.AUTH_MAIL}>`,
+        from: `"Finacyy Support" <${process.env.AUTH_MAIL}>`,
         to: email,
         replyTo: email, // Allows replying directly to the user's email
-        subject: "Thank You for Contacting Financyy",
+        subject: "Thank You for Contacting Finacyy",
         html: `
           <div style="font-family: Arial, sans-serif; background: #f9fafb; padding: 24px;">
             <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px;">
@@ -521,7 +521,7 @@ class Utility {
           minute: 'numeric',
           timeZoneName: 'short'
         })}</p>
-              <p style="font-size: 12px; color: #888;">— The Financyy Team</p>
+              <p style="font-size: 12px; color: #888;">— The Finacyy Team</p>
             </div>
           </div>
         `,
@@ -565,24 +565,24 @@ class Utility {
       });
 
       let mailOptions = {
-        from: `"Financyy Reports" <${process.env.AUTH_MAIL}>`,
+        from: `"Finacyy Reports" <${process.env.AUTH_MAIL}>`,
         to: to_email,
-        subject: `📊 Your Financyy Report – ${month}/${year}`,
+        subject: `📊 Your Finacyy Report – ${month}/${year}`,
         text: `
   Hello,
   
-  Attached is your finance report for ${month}/${year}, generated by Financyy.
+  Attached is your finance report for ${month}/${year}, generated by Finacyy.
   
   This report includes your income, expenses, savings, and top spending categories to help you stay financially informed.
   
   If you have any questions or feedback, feel free to reach out.
   
   Best regards,  
-  Financyy Team
+  Finacyy Team
         `.trim(),
         html: `
   <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-    <h2 style="color: #2E86DE; margin-bottom: 0;">📊 Financyy Monthly Report</h2>
+    <h2 style="color: #2E86DE; margin-bottom: 0;">📊 Finacyy Monthly Report</h2>
     <p style="margin-top: 4px;"><strong>Month:</strong> ${month}/${year}</p>
   
     <p>Dear User,</p>
@@ -601,10 +601,10 @@ class Utility {
   
     <p>
       For support or questions, feel free to contact us at 
-      <a href="mailto:support@financyy.com">support@financyy.com</a>.
+      <a href="mailto:support@Finacyy.com">support@Finacyy.com</a>.
     </p>
   
-    <p>Best regards,<br><strong>Financyy Team</strong></p>
+    <p>Best regards,<br><strong>Finacyy Team</strong></p>
   
     <hr style="border: none; border-top: 1px solid #ccc; margin-top: 20px;" />
     <p style="font-size: 12px; color: #888;">
@@ -629,9 +629,6 @@ class Utility {
   }
 
 
-
-  // ...inside Utility class...
-
   async sendReportMailWithPDF({ to_email, year, month, summary, categories, barChartImg, doughnutChartImg, user_name }) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -641,13 +638,11 @@ class Utility {
         doc.on("end", async () => {
           const pdfBuffer = Buffer.concat(buffers);
 
-          // Dynamic values
-          const totalIncome = summary?.data?.total_income ?? 0;
-          const totalExpense = summary?.data?.total_expense ?? 0;
-          const savings = summary?.data?.savings ?? 0;
+          const totalIncome = summary?.total_income ?? 0;
+          const totalExpense = summary?.total_expense ?? 0;
+          const savings = summary?.savings ?? 0;
           const displayName = user_name || "User";
 
-          // Send professional HTML email if email provided
           if (to_email) {
             let transporter = require("nodemailer").createTransport({
               host: "smtp.gmail.com",
@@ -671,14 +666,14 @@ class Utility {
               </ul>
               <p>For a full breakdown, see the attached PDF.</p>
               <hr/>
-              <p style="font-size:12px;color:#888;">This is an automated email from Financyy. Please do not reply.</p>
+              <p style="font-size:12px;color:#888;">This is an automated email from Finacyy. Please do not reply.</p>
             </div>
           `;
 
             await transporter.sendMail({
-              from: `"Financyy Reports" <${process.env.AUTH_MAIL}>`,
+              from: `"Finacyy Reports" <${process.env.AUTH_MAIL}>`,
               to: to_email,
-              subject: `📊 Financyy Monthly Report – ${month}/${year}`,
+              subject: `📊 Finacyy Monthly Report – ${month}/${year}`,
               html: htmlBody,
               attachments: [
                 {
@@ -692,8 +687,7 @@ class Utility {
           resolve(pdfBuffer);
         });
 
-        // --- PDF Content ---
-        doc.fontSize(22).fillColor('#2563eb').text("Financyy Monthly Report", { align: "left" });
+        doc.fontSize(22).fillColor('#2563eb').text("Finacyy Monthly Report", { align: "left" });
         doc.moveDown(0.5);
         doc.fontSize(12).fillColor('#444').text(`Month: ${month}/${year}`, { align: "left" });
         doc.text(`Generated: ${new Date().toLocaleString()}`, { align: "left" });
@@ -737,7 +731,7 @@ class Utility {
         }
 
         doc.moveDown();
-        doc.fontSize(10).fillColor('#888').text("Report generated by Financyy | https://financyy.com", { align: "center" });
+        doc.fontSize(10).fillColor('#888').text("Report generated by Finacyy | https://Finacyy.com", { align: "center" });
 
         doc.end();
       } catch (err) {

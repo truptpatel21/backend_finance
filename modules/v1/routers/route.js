@@ -91,7 +91,8 @@ router.post("/api/reports/generate", middleware.validateJwtToken, UserController
 
 
 
-
+router.post('/api/stripe/session', middleware.validateJwtToken, UserController.createStripeSession);
+router.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), UserController.stripeWebhook);
 
 
 module.exports = router;
