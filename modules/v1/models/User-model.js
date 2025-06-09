@@ -8,7 +8,7 @@ class UserModel {
   async getUserWithDevice(body) {
     const { user_id } = body;
     const [user] = await connection.promise().query(
-      'SELECT id, name, email, role, address, is_active, created_at, updated_at FROM users WHERE id = ? AND is_deleted = 0 AND is_active = 1',
+      'SELECT id, name, email, subscription_plan, role, address, is_active, created_at, updated_at FROM users WHERE id = ? AND is_deleted = 0 AND is_active = 1',
       [user_id]
     );
     if (!user.length) return null;
@@ -1296,6 +1296,37 @@ class UserModel {
       return { code: error_code.OPERATION_FAILED, messages: err.message };
     }
   }
+
+
+
+  async updateSubscription(body) {
+    try {
+      const { user_id, plan } = body;
+      const validPlans = ['free', 'pro', 'elite'];
+      if (!validPlans.includes(plan)) {
+        return { code: 0, messages: "Invalid subscription plan." };
+      }
+
+      await connection.promise().query(
+        "UPDATE users SET subscription_plan = ?, updated_at = NOW() WHERE id = ? AND is_deleted = 0",
+        [plan, user_id]
+      );
+
+      const [updatedUser] = await connection.promise().query(
+        "SELECT id, name, email, subscription_plan FROM users WHERE id = ?",
+        [user_id]
+      );
+
+      return {
+        code: 1,
+        messages: "Subscription updated successfully.",
+        data: updatedUser[0],
+      };
+    } catch (err) {
+      return { code: 0, messages: err.message };
+    }
+  }
+  
 
   
 }

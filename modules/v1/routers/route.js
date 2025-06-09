@@ -86,6 +86,11 @@ router.post('/api/analytics/spending-trends', middleware.validateJwtToken, UserC
 
 
 router.post('/api/contact', UserController.contactUs);
+router.post('/api/subscribe', middleware.validateJwtToken, UserController.subscribe);
+router.post("/api/reports/generate", middleware.validateJwtToken, UserController.generateReport);
+
+
+
 
 
 

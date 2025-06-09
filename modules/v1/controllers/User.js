@@ -2,8 +2,14 @@ const UserModel = require('../models/User-model');
 const common = require('../../../utilities/common');
 const middleware = require('../../../middlewares/validators');
 const error_code = require('../../../utilities/request-error-code');
+const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require("fs");
+const nodemailer = require('nodemailer');
 
 class UserController {
+
+    
 
     // User Registration
     async register(req, res) {
@@ -637,8 +643,65 @@ class UserController {
         } catch (error) {
             middleware.send_response(req, res, 500, { keyword: error.message }, {});
         }
+    }
+    
+
+    // Subscription Toggle
+    async subscribe(req, res) {
+        try {
+            const rules = { plan: 'required|string|in:free,pro,elite' };
+            let messages = { required: req.language.required };
+            if (!middleware.checkValidationRules(req, res, req.body, rules, messages)) return;
+
+            const response = await UserModel.updateSubscription({ ...req.body, user_id: req.user.id });
+            middleware.send_response(req, res, response.code, { keyword: response.messages }, response.data);
+        } catch (error) {
+            middleware.send_response(req, res, 500, { keyword: error.message }, {});
+        }
+    }
+
+
+    async generateReport(req, res) {
+        try {
+            const { user_id } = req.user;
+            const { year, month, barChartImg, doughnutChartImg, email, user_name } = req.body;
+
+            // Retrieve monthly financial summary
+            const summary = await UserModel.getMonthlySummary({ user_id, year, month });
+
+            // Retrieve top spending categories for the given month
+            const categories = await UserModel.getTopSpendingCategories({
+                user_id,
+                start_date: `${year}-${month.toString().padStart(2, "0")}-01`,
+                end_date: `${year}-${month.toString().padStart(2, "0")}-31`,
+            });
+
+            // Use the utility to generate PDF and send email
+            const pdfBuffer = await common.sendReportMailWithPDF({
+                to_email: email,
+                year,
+                month,
+                summary,
+                categories,
+                barChartImg,
+                doughnutChartImg,
+                user_name
+            });
+
+            res.setHeader("Content-Disposition", `attachment; filename=Finance_Report_${year}_${month}.pdf`);
+            res.setHeader("Content-Type", "application/pdf");
+            res.end(pdfBuffer);
+        } catch (error) {
+            console.error("Error generating PDF report:", error);
+            res.status(500).json({ message: "An error occurred while generating the report." });
+        }
       }
+    
+
+  
 
 }
+
+
 
 module.exports = new UserController();
