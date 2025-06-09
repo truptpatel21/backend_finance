@@ -701,77 +701,77 @@ class UserController {
 
 
 
-async createStripeSession(req, res) {
-    try {
-        const { plan } = req.body;
-        const user_id = req.user.id;
-        if (!plans[plan]) return res.status(400).json({ message: "Invalid plan." });
+// async createStripeSession(req, res) {
+//     try {
+//         const { plan } = req.body;
+//         const user_id = req.user.id;
+//         if (!plans[plan]) return res.status(400).json({ message: "Invalid plan." });
 
-        // Create Stripe customer if not exists
-        let [user] = await connection.promise().query('SELECT * FROM users WHERE id = ?', [user_id]);
-        user = user[0];
-        let customerId = user.stripe_customer_id;
-        if (!customerId) {
-            const customer = await stripe.customers.create({
-                email: user.email,
-                name: user.name,
-                metadata: { user_id }
-            });
-            await UserModel.setStripeCustomer(user_id, customer.id);
-            customerId = customer.id;
-        }
+//         // Create Stripe customer if not exists
+//         let [user] = await connection.promise().query('SELECT * FROM users WHERE id = ?', [user_id]);
+//         user = user[0];
+//         let customerId = user.stripe_customer_id;
+//         if (!customerId) {
+//             const customer = await stripe.customers.create({
+//                 email: user.email,
+//                 name: user.name,
+//                 metadata: { user_id }
+//             });
+//             await UserModel.setStripeCustomer(user_id, customer.id);
+//             customerId = customer.id;
+//         }
 
-        // Create checkout session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'subscription',
-            customer: customerId,
-            line_items: [{ price: plans[plan], quantity: 1 }],
-            success_url: `${process.env.APP_URL}/dashboard?subscription=success`,
-            cancel_url: `${process.env.APP_URL}/dashboard?subscription=cancel`,
-            metadata: { user_id, plan }
-        });
+//         // Create checkout session
+//         const session = await stripe.checkout.sessions.create({
+//             payment_method_types: ['card'],
+//             mode: 'subscription',
+//             customer: customerId,
+//             line_items: [{ price: plans[plan], quantity: 1 }],
+//             success_url: `${process.env.APP_URL}/dashboard?subscription=success`,
+//             cancel_url: `${process.env.APP_URL}/dashboard?subscription=cancel`,
+//             metadata: { user_id, plan }
+//         });
 
-        res.json({ url: session.url });
-    } catch (err) {
-        console.error("Stripe session error:", err);
-        res.status(500).json({ message: "Stripe error." });
-    }
-}
+//         res.json({ url: session.url });
+//     } catch (err) {
+//         console.error("Stripe session error:", err);
+//         res.status(500).json({ message: "Stripe error." });
+//     }
+// }
 
-// Stripe webhook endpoint
-async stripeWebhook(req, res) {
-    const sig = req.headers['stripe-signature'];
-    let event;
-    try {
-        event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-        console.error("Webhook signature error:", err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
+// // Stripe webhook endpoint
+// async stripeWebhook(req, res) {
+//     const sig = req.headers['stripe-signature'];
+//     let event;
+//     try {
+//         event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
+//     } catch (err) {
+//         console.error("Webhook signature error:", err.message);
+//         return res.status(400).send(`Webhook Error: ${err.message}`);
+//     }
 
-    // Handle subscription events
-    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-        const planId = subscription.items.data[0].price.id;
-        let plan = Object.keys(plans).find(key => plans[key] === planId) || 'free';
-        const user = await UserModel.getUserByStripeCustomer(customerId);
-        if (user) {
-            await UserModel.setStripeSubscription(user.id, subscription.id, plan);
-        }
-    }
-    if (event.type === 'customer.subscription.deleted') {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-        const user = await UserModel.getUserByStripeCustomer(customerId);
-        if (user) {
-            await UserModel.setStripeSubscription(user.id, null, 'free');
-        }
-    }
+//     // Handle subscription events
+//     if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+//         const subscription = event.data.object;
+//         const customerId = subscription.customer;
+//         const planId = subscription.items.data[0].price.id;
+//         let plan = Object.keys(plans).find(key => plans[key] === planId) || 'free';
+//         const user = await UserModel.getUserByStripeCustomer(customerId);
+//         if (user) {
+//             await UserModel.setStripeSubscription(user.id, subscription.id, plan);
+//         }
+//     }
+//     if (event.type === 'customer.subscription.deleted') {
+//         const subscription = event.data.object;
+//         const customerId = subscription.customer;
+//         const user = await UserModel.getUserByStripeCustomer(customerId);
+//         if (user) {
+//             await UserModel.setStripeSubscription(user.id, null, 'free');
+//         }
+//     }
 
-    res.json({ received: true });
-}
+//     res.json({ received: true });
+// }
 
     
 
