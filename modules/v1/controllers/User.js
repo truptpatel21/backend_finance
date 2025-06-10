@@ -9,6 +9,35 @@ const nodemailer = require('nodemailer');
 const { stripe, plans } = require('../../../utilities/stripe');
 const connection = require('../../../config/database');
 
+
+function getPlanOrder(value) {
+    if (value === "free") return 0;
+    if (value === "pro") return 1;
+    if (value === "elite") return 2;
+    return -1;
+}
+
+async function applyPendingDowngradeIfDue(user_id) {
+    // Get pending downgrade info
+    const [rows] = await connection.promise().query(
+        'SELECT pending_plan, pending_plan_effective FROM users WHERE id = ?', [user_id]
+    );
+    if (!rows.length) return;
+
+    const { pending_plan, pending_plan_effective } = rows[0];
+    if (
+        pending_plan === "free" &&
+        pending_plan_effective &&
+        new Date(pending_plan_effective) <= new Date()
+    ) {
+        // Apply downgrade
+        await connection.promise().query(
+            'UPDATE users SET subscription_plan = "free", pending_plan = NULL, pending_plan_effective = NULL WHERE id = ?',
+            [user_id]
+        );
+    }
+}
+
 class UserController {
 
     
@@ -126,6 +155,7 @@ class UserController {
     // Get Profile
     async getProfile(req, res) {
         try {
+            // await applyPendingDowngradeIfDue(req.user.id); 
             const response = await UserModel.getProfile({ ...req.body, user_id: req.user.id });
             middleware.send_response(req, res, response.code, { keyword: response.messages }, response.data);
         } catch (error) {
@@ -599,8 +629,6 @@ class UserController {
     }
 
 
-    // ...existing code...
-
     // Analytics: Income vs Expense (per month)
     async getIncomeExpenseAnalytics(req, res) {
         try {
@@ -646,21 +674,6 @@ class UserController {
             middleware.send_response(req, res, 500, { keyword: error.message }, {});
         }
     }
-    
-
-    // Subscription Toggle
-    async subscribe(req, res) {
-        try {
-            const rules = { plan: 'required|string|in:free,pro,elite' };
-            let messages = { required: req.language.required };
-            if (!middleware.checkValidationRules(req, res, req.body, rules, messages)) return;
-
-            const response = await UserModel.updateSubscription({ ...req.body, user_id: req.user.id });
-            middleware.send_response(req, res, response.code, { keyword: response.messages }, response.data);
-        } catch (error) {
-            middleware.send_response(req, res, 500, { keyword: error.message }, {});
-        }
-    }
 
 
     async generateReport(req, res) {
@@ -697,6 +710,143 @@ class UserController {
             res.status(500).json({ message: "An error occurred while generating the report." });
         }
     }
+    
+
+    // Subscription Toggle
+    async subscribe(req, res) {
+        try {
+            const rules = { plan: 'required|string|in:free,pro,elite' };
+            let messages = { required: req.language.required };
+            if (!middleware.checkValidationRules(req, res, req.body, rules, messages)) return;
+
+            const response = await UserModel.updateSubscription({ ...req.body, user_id: req.user.id });
+            middleware.send_response(req, res, response.code, { keyword: response.messages }, response.data);
+        } catch (error) {
+            middleware.send_response(req, res, 500, { keyword: error.message }, {});
+        }
+    }
+
+    
+
+    async previewSubscriptionChange(req, res) {
+        try {
+            const { target_plan } = req.body;
+            const user_id = req.user.id;
+            const [user] = await connection.promise().query(
+                'SELECT subscription_plan, subscription_expiry FROM users WHERE id = ?', [user_id]
+            );
+            if (!user.length) return res.status(404).json({ message: "User not found." });
+
+            const currentPlan = user[0].subscription_plan || "free";
+            const expiry = user[0].subscription_expiry; 
+
+            let action = "subscribe";
+            if (currentPlan === target_plan) action = "current";
+            else if (getPlanOrder(target_plan) > getPlanOrder(currentPlan)) action = "upgrade";
+            else if (getPlanOrder(target_plan) < getPlanOrder(currentPlan)) action = "downgrade";
+
+            let message = "";
+            let effectiveDate = new Date();
+            if (action === "upgrade") {
+                if (currentPlan === "free") {
+                    message = "You will be upgraded immediately.";
+                } else {
+                    message = `Your upgrade will take effect after your current plan expires on ${expiry}.`;
+                    effectiveDate = expiry;
+                }
+            } else if (action === "downgrade") {
+                message = `Your downgrade will take effect after your current plan expires on ${expiry}.`;
+                effectiveDate = expiry;
+            } else if (action === "subscribe") {
+                message = "You will be subscribed immediately.";
+            } else {
+                message = "You are already on this plan.";
+            }
+
+            res.json({
+                currentPlan,
+                expiry,
+                targetPlan: target_plan,
+                action,
+                message,
+                effectiveDate,
+            });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    }
+
+    async downgradeSubscription(req, res) {
+        try {
+            const user_id = req.user.id;
+            // Get current plan and expiry
+            const [userRows] = await connection.promise().query(
+                'SELECT subscription_plan, subscription_expiry FROM users WHERE id = ?', [user_id]
+            );
+            if (!userRows.length) return res.status(404).json({ message: "User not found." });
+
+            const currentPlan = userRows[0].subscription_plan;
+            const expiry = userRows[0].subscription_expiry;
+
+            if (currentPlan === "free") {
+                return res.json({ code: 1, message: "Already on free plan." });
+            }
+
+            // Schedule downgrade
+            await connection.promise().query(
+                'UPDATE users SET pending_plan = ?, pending_plan_effective = ? WHERE id = ?',
+                ["free", expiry, user_id]
+            );
+
+            res.json({ code: 1, message: "Downgrade scheduled after current plan expires.", data: { pending_plan: "free", pending_plan_effective: expiry } });
+        } catch (err) {
+            res.status(500).json({ code: 0, message: err.message });
+        }
+    }
+
+
+    async createStripeSession(req, res) {
+        try {
+            const { plan } = req.body;
+            const user_id = req.user.id;
+            if (!plans[plan]) return res.status(400).json({ message: "Invalid plan." });
+
+            // Create Stripe customer if not exists
+            let [user] = await connection.promise().query('SELECT * FROM users WHERE id = ?', [user_id]);
+            user = user[0];
+            let customerId = user.stripe_customer_id;
+            if (!customerId) {
+                const customer = await stripe.customers.create({
+                    email: user.email,
+                    name: user.name,
+                    metadata: { user_id }
+                });
+                await UserModel.setStripeCustomer(user_id, customer.id);
+                customerId = customer.id;
+            }
+
+            // Create checkout session
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                mode: 'subscription',
+                customer: customerId,
+                line_items: [{ price: plans[plan], quantity: 1 }],
+                success_url: `${process.env.APP_URL}/subscribe/success?plan=${plan}`,
+                cancel_url: `${process.env.APP_URL}/subscribe/canceled?plan=${plan}`,
+                metadata: { user_id, plan }
+            });
+
+            res.json({ url: session.url });
+        } catch (err) {
+            console.error("Stripe session error:", err);
+            res.status(500).json({ message: "Stripe error." });
+        }
+    }
+
+    
+
+
+   
     
 
 

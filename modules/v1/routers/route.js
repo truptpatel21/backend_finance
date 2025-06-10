@@ -89,6 +89,10 @@ router.post('/api/contact', UserController.contactUs);
 router.post('/api/subscribe', middleware.validateJwtToken, UserController.subscribe);
 router.post("/api/reports/generate", middleware.validateJwtToken, UserController.generateReport);
 
+router.post('/api/subscription/preview', middleware.validateJwtToken, UserController.previewSubscriptionChange);
+router.post('/api/subscription/downgrade', middleware.validateJwtToken, UserController.downgradeSubscription);
+router.post('/api/stripe/session', middleware.validateJwtToken, UserController.createStripeSession);
+
 
 
 // router.post('/api/stripe/session', middleware.validateJwtToken, UserController.createStripeSession);

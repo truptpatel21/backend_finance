@@ -3,6 +3,8 @@ const common = require('../../../utilities/common');
 const error_code = require('../../../utilities/request-error-code');
 const bcrypt = require('bcrypt');
 
+
+
 class UserModel {
   // User/device logic
   async getUserWithDevice(body) {
@@ -1152,8 +1154,6 @@ class UserModel {
   }
 
 
-
-  // ...existing code...
 
   // Analytics: Income vs Expense (per month, last 12 months)
   async getIncomeExpenseAnalytics({ user_id }) {
