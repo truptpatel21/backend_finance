@@ -235,7 +235,7 @@ class UserModel {
   async fetchUsers() {
     try {
       const [users] = await connection.promise().query(
-        'SELECT id, name, email, role, address, is_active, is_deleted, created_at, updated_at FROM users'
+        'SELECT * FROM users'
       );
       if (!users.length) {
         return { code: error_code.NO_DATA_FOUND, messages: "No users found." };
@@ -256,8 +256,16 @@ class UserModel {
       if (body.address !== undefined) updateData.address = body.address;
       if (body.is_active !== undefined) updateData.is_active = body.is_active;
       if (body.is_deleted !== undefined) updateData.is_deleted = body.is_deleted;
-      updateData.updated_at = new Date();
+      if (body.subscription_plan !== undefined) updateData.subscription_plan = body.subscription_plan;
+      if (body.pending_plan !== undefined) updateData.pending_plan = body.pending_plan;
+      if (body.pending_plan_effective !== undefined) updateData.pending_plan = body.pending_plan;
+      if (body.subscription_expiry !== undefined) updateData.pending_plan = body.pending_plan;
+      if (body.stripe_customer_id !== undefined) updateData.pending_plan = body.pending_plan;
+      if (body.stripe_subscription_id !== undefined) updateData.pending_plan = body.pending_plan;
+       
+        updateData.updated_at = new Date();
 
+   
       if (Object.keys(updateData).length === 1) {
         return { code: error_code.NO_DATA_FOUND, messages: "No fields provided for update." };
       }

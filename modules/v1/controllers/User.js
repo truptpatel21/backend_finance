@@ -200,7 +200,14 @@ class UserController {
                 role: 'string|in:user,admin|nullable',
                 address: 'string|nullable',
                 is_active: 'boolean|nullable',
-                is_deleted: 'boolean|nullable'
+                is_deleted: 'boolean|nullable',
+                subscription_plan: 'string|in:free,pro,elite|nullable',
+                pending_plan: 'string|in:free,pro,elite|nullable',
+                pending_plan_effective: 'date|nullable',
+                subscription_expiry: 'date|nullable',
+                stripe_customer_id: 'string|nullable',
+                stripe_subscription_id: 'string|nullable',
+
             };
             let messages = { required: req.language.required };
             if (!middleware.checkValidationRules(req, res, req.body, rules, messages)) return;
